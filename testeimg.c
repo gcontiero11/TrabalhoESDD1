@@ -8,77 +8,20 @@ typedef struct {
     int** matriz;
 } Arquivo;
 
-// char lerArquivoCompactado(FILE arquivo*){
-//     imagem = fopen("entrada.pgm", "r");
-
-//     if (imagem == null) {
-//         print("Erro na leitura do arquivo");
-//         return;
-//     }
-
-//     char linha[tamanhoLinha];
-//     char *leitura;
-//     leitura = fgets(linha, 24, imagem); 
-    
-//     descompactarArquivo(leitura);
-// }
-
-// char lerArquivoDescompactado(FILE arquivo*){
-//         FILE *imagem;
-
-//         imagem = fopen("entrada.pgmc", "r");
-
-//         if (imagem == null) {
-//             print("Erro na leitura do arquivo");
-//             return;
-//     }
-
-//     char* linha;
-//     linha = char* malloc(sizeof(char) * tamanhoLinha);
-//     char *leitura;
-//     leitura = fgets(linha, tamanhoMatriz, imagem);
-
-//     compactarArquivo(linha);
-// }
-
-// char compactarLinha(char *linha, char arqSaida, int *tamanhoLinha){
-//     arqSaida = fopen(arqSaida, "w");
-//     int conta_repeticao = 0;
-//     int marcador = arqSaida[0];
-//     int inicio = arqSaida[0];
-//     for (int i = 0; i < tamanhoLinha; i++){
-//         if(arqSaida[i] == marcador){
-//             conta_repeticao += 1;
-//             if(conta_repeticao > 3){
-//             inicio = (char) "@";
-//             arqSaida[inicio + 1] = marcador;
-//             arqSaida[inicio + 2] = conta_repeticao;
-//             } 
-//         }
-//         else{
-//             conta_repeticao = 0
-//             marcador = arqSaida[i];
-//             inicio = arqSaida[i];
-//         }
-//     }
-//     return arqSaida;
-// }
-
-
-
-// char descompactarLinha(char *linha){
-    
-// }
-void printMatriz(int** matriz,int numeroLinha,int numeroColuna){
-    for (size_t i = 0; i < numeroLinha; i++){
-        for (size_t j = 0; j < numeroColuna; j++){
-            printf("%d ",matriz[i][j]);
+void printMatriz(Arquivo* arquivo){
+    for (int i = 0; i < arquivo->numeroLinhas; i++){
+        int j = 0;
+        while(arquivo->matriz[i][j] != -2){
+            if (arquivo->matriz[i][j] == -1){printf("@ ");}
+            else{
+                printf("%d ",arquivo->matriz[i][j]);
+            }
+            j++;
         }
         printf("\n");
     }
     
 }
-
 
 int** criaMatrizDinamica(int numeroLinhas,int numeroColunas){
     int** matriz;
@@ -95,6 +38,65 @@ void preencheMatrizDesconpactada(FILE* arquivo,Arquivo* novoArquivo){
             fscanf(arquivo,"%d",&novoArquivo->matriz[i][j]);
         }
     }
+}
+
+void limpaMatrizDoArquivo(Arquivo* arquivo){
+    for (int i = 0; i < arquivo->numeroLinhas; i++){
+        free(arquivo->matriz[i]);
+    }
+    free(arquivo->matriz);
+}
+
+int compactaMatriz(Arquivo* arquivo){
+    int** novaMatriz = malloc(sizeof(int*) * arquivo->numeroLinhas);
+    
+    int tamanho = arquivo->numeroColunas;
+    for (int i = 0; i < arquivo->numeroLinhas; i++){
+        novaMatriz[i] = malloc(sizeof(int) * tamanho);
+        // int* novoVetor[tamanho];
+    }
+    
+
+    int k;
+
+    for (k = 0; k < arquivo->numeroLinhas; k++){
+
+        int i = 0, j = 0, novoTamanhoColunas = 0;
+        int contaRepeticao = 1;
+
+        for (j = i + 1; j < tamanho; j++) {
+            if (arquivo->matriz[k][i] == arquivo->matriz[k][j]) {
+                contaRepeticao++;
+            } else {
+                if (contaRepeticao >= 3) {
+                    novaMatriz[k][novoTamanhoColunas++] = -1;
+                    novaMatriz[k][novoTamanhoColunas++] = arquivo->matriz[k][i];
+                    novaMatriz[k][novoTamanhoColunas++] = contaRepeticao;
+                } else {
+                    for (int l = 0; l < contaRepeticao; l++) {
+                        novaMatriz[k][novoTamanhoColunas++] = arquivo->matriz[k][i];
+                    }
+                }
+                contaRepeticao = 1;
+                i = j;
+            }
+        }
+        if (contaRepeticao >= 3) {
+            novaMatriz[k][novoTamanhoColunas++] = -1;
+            novaMatriz[k][novoTamanhoColunas++] = arquivo->matriz[k][i];
+            novaMatriz[k][novoTamanhoColunas++] = contaRepeticao;
+        } else {
+            for (int l = 0; l < contaRepeticao; l++) {
+                novaMatriz[k][novoTamanhoColunas++] = arquivo->matriz[k][i];
+            }
+        }
+        novaMatriz[k][novoTamanhoColunas] = -2;
+    }
+
+    limpaMatrizDoArquivo (arquivo);
+
+    arquivo->matriz = novaMatriz;
+    return 1;
 }
 
 int** preencheMatrizCompactada(FILE* arquivo, Arquivo* novoArquivo){
@@ -136,19 +138,11 @@ Arquivo* lerArquivo(FILE* arquivo){
     else{
         printf("DEU RUIM!\n");
     }
-    // else{
-    //     novoArquivo->matriz = preencheMatrizCompactada(novoArquivo);
-    // }
-    
-    //Preenche Matriz;
-    
-    
-    // printf("%s\n",&novoArquivo->nome);
-    // printf("%d %d\n",novoArquivo->numeroColunas,novoArquivo->numeroLinhas); // teste
-    printMatriz(novoArquivo->matriz,novoArquivo->numeroLinhas,novoArquivo->numeroColunas);
 
-    
-    // if(novoArquivo->nome == "P2")Compactar(arquivo);
+    if(strcmp(novoArquivo->nome,"P2") == 0){
+        compactaMatriz(novoArquivo);
+    }
+    printMatriz(novoArquivo);
     // else Descompactar(arquivo);
     return novoArquivo;
         
@@ -162,45 +156,3 @@ int main(){
     // *novoArquivo = transformaArquivo(novoArquivo);
     // escreveArquivo(novoArquivo);
 }
-
-// Arquivo transformaArquivo(Arquivo arquivo){
-//     int numeroLinhas = arquivo.numeroLinhas;
-//     Arquivo *novoArquivo;
-//     *novoArquivo = lerArquivo();
-    
-//     for(int i = 0; i<numeroLinhas;i++){
-        
-//     }
-    
-// }
-
-
-
-
-
-/* int matriz[linhas][colunas];
-int conta_repeticao = 0;
-int marcador = matriz[0][0];
-for (i = 0; i < linhas; i++){
-conta_repeticao = 0;
-int inicio = matriz[i][j]; 
-int num_repetido = matriz[i+1] []]; 
-int quantidade = matriz[i+2][j]; 
-
-for (j = 0; j < colunas; i++){
-    if (matriz[i][j] == marcador){
-        conta_repeticao += 1; 
-
-        if (conta_repeticao > 3){ 
-            inicio = (char) "@"; 
-            num_repetido = marcador; 
-            quantidade = conta_repeticao;
-        }
-
-    else{
-        conta_repeticao = 0;
-        marcador = matriz[i][j];
-} */
-
-// if (valor[i] == "@")
-

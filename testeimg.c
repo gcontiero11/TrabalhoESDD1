@@ -48,23 +48,14 @@ void limpaMatrizDoArquivo(Arquivo* arquivo){
 }
 
 int compactaMatriz(Arquivo* arquivo){
-    int** novaMatriz = malloc(sizeof(int*) * arquivo->numeroLinhas);
+    int** novaMatriz = criaMatrizDinamica(arquivo->numeroLinhas,arquivo->numeroColunas);
     
-    int tamanho = arquivo->numeroColunas;
-    for (int i = 0; i < arquivo->numeroLinhas; i++){
-        novaMatriz[i] = malloc(sizeof(int) * tamanho);
-        // int* novoVetor[tamanho];
-    }
-    
-
-    int k;
-
-    for (k = 0; k < arquivo->numeroLinhas; k++){
+    for (int k = 0; k < arquivo->numeroLinhas; k++){
 
         int i = 0, j = 0, novoTamanhoColunas = 0;
         int contaRepeticao = 1;
 
-        for (j = i + 1; j < tamanho; j++) {
+        for (j = i + 1; j < arquivo->numeroColunas; j++) {
             if (arquivo->matriz[k][i] == arquivo->matriz[k][j]) {
                 contaRepeticao++;
             } else {
@@ -149,7 +140,7 @@ Arquivo* lerArquivo(FILE* arquivo){
 }
 
 void escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
-    if(strcmp(arquivo->nome,"P2") == 0) fprintf(arquivoSaida, "P8 \n", arquivo->nome);
+    if(strcmp(arquivo->nome,"P2") == 0) fprintf(arquivoSaida,"P8 \n");
     else fprintf(arquivoSaida, "%s \n",arquivo->nome);
 
     fprintf(arquivoSaida,"%d %d \n", arquivo->numeroColunas, arquivo->numeroLinhas);
@@ -171,6 +162,7 @@ void escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
 }
 
 int main(int argc, char* argv[]){
+    // TESTE GIT
     if (argc != 3) {
         printf("Uso: %s arquivo_entrada arquivo_saida\n", argv[0]);
         return 1;

@@ -125,6 +125,7 @@ Arquivo* lerArquivo(FILE* arquivo){
     if(arquivo == NULL) printf("Erro na leitura");
     
     Arquivo *novoArquivo = (Arquivo*) malloc(sizeof(Arquivo) * 1);
+    printf("TA NO LER ARQUIVOS\n");
     fscanf(arquivo,"%s", &novoArquivo->nome);
     printf("%s\n",novoArquivo->nome);
     fscanf(arquivo, "%d %d", &novoArquivo->numeroColunas, &novoArquivo->numeroLinhas);
@@ -145,14 +146,48 @@ Arquivo* lerArquivo(FILE* arquivo){
     printMatriz(novoArquivo);
     // else Descompactar(arquivo);
     return novoArquivo;
-        
 }
 
-int main(){
-    FILE* arquivo;
-    arquivo = abrirArquivo("exemplo1.pgm");
+void escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
+    if(strcmp(arquivo->nome,"P2") == 0) fprintf(arquivoSaida, "P8 \n", arquivo->nome);
+    else fprintf(arquivoSaida, "%s \n",arquivo->nome);
+
+    fprintf(arquivoSaida,"%d %d \n", arquivo->numeroColunas, arquivo->numeroLinhas);
+    fprintf(arquivoSaida, "%d \n", arquivo->maiorPixel);
+
+    for(int i = 0; i < arquivo->numeroLinhas; i++){
+        int j = 0;
+        while(arquivo->matriz[i][j] != -2){
+            if (arquivo->matriz[i][j] == -1){
+                fprintf(arquivoSaida,"@ ");
+            }
+            else{
+                fprintf(arquivoSaida,"%d ",arquivo->matriz[i][j]);
+            }
+            j++;
+        }
+        fprintf(arquivoSaida,"\n");
+    }
+}
+
+int main(int argc, char* argv[]){
+    if (argc != 3) {
+        printf("Uso: %s arquivo_entrada arquivo_saida\n", argv[0]);
+        return 1;
+    }
+
+    FILE* arquivoEntrada = fopen(argv[1], "r");
+    FILE* arquivoSaida = fopen(argv[2], "w");
+
+    if (arquivoEntrada == NULL) {
+        perror("Erro ao abrir o arquivo");
+        return 0;
+    }
+
     Arquivo *novoArquivo;
-    novoArquivo = lerArquivo(arquivo);
-    // *novoArquivo = transformaArquivo(novoArquivo);
-    // escreveArquivo(novoArquivo);
+    novoArquivo = lerArquivo(arquivoEntrada);
+    escreverArquivo(novoArquivo,arquivoSaida);
+
+    fclose(arquivoEntrada);
+    fclose(arquivoSaida);
 }

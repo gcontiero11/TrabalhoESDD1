@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 typedef struct {
     char nome[10];
@@ -90,19 +91,41 @@ int compactaMatriz(Arquivo* arquivo){
     return 1;
 }
 
-int** preencheMatrizCompactada(FILE* arquivo, Arquivo* novoArquivo){
-    for (int i = 0; i < novoArquivo->numeroLinhas; i++){
-        char prototipo;
-        for (int j = 0; j < novoArquivo->numeroColunas; j++){ 
+int descompactaMatriz(Arquivo* arquivo){
+    int tamanho = arquivo->numeroColunas;
 
-            fscanf(arquivo,"%c",&prototipo);
-            if (prototipo == '@')
-            {
-                novoArquivo->matriz[i][j] =  prototipo;
+    for (int k = 0; k < arquivo->numeroLinhas; k++){
+        for (int i = 0; i < tamanho; i++){
+            if (arquivo->matriz[k][i] == -1){
+                int repetido = arquivo->matriz[k][i+1];
+                int quantidade = arquivo->matriz[k][i+2];
+
+                for (int j = i; j < quantidade + i; j++){
+                    arquivo->matriz[k][j] = repetido;            
+                }
             }
-    
-            fscanf(arquivo,"%d",&novoArquivo->matriz[i][j]);
+            else{
+                arquivo->matriz[k][i] = arquivo->matriz[k][i]; 
+            }
         }
+    }
+    // printMatriz(arquivo);
+    return 1;
+}
+
+void preencheMatrizCompactada(FILE* arquivo, Arquivo* novoArquivo){
+    char * linha = (char * ) malloc(sizeof(char) * novoArquivo->numeroColunas*2+4);
+    int tamanho = novoArquivo->numeroColunas*2+4;
+    char* caractere;
+
+    for(int i = 0; i < novoArquivo->numeroLinhas+1; i++){
+        int contador = 0;
+        fgets(linha, tamanho, arquivo);
+        if (i>0){ 
+            for (int j = 0; j < tamanho; j++){  
+            }
+            printf("\n");
+        }  
     }
 }
 
@@ -116,7 +139,6 @@ Arquivo* lerArquivo(FILE* arquivo){
     if(arquivo == NULL) printf("Erro na leitura");
     
     Arquivo *novoArquivo = (Arquivo*) malloc(sizeof(Arquivo) * 1);
-    printf("TA NO LER ARQUIVOS\n");
     fscanf(arquivo,"%s", &novoArquivo->nome);
     printf("%s\n",novoArquivo->nome);
     fscanf(arquivo, "%d %d", &novoArquivo->numeroColunas, &novoArquivo->numeroLinhas);
@@ -124,18 +146,16 @@ Arquivo* lerArquivo(FILE* arquivo){
 
     novoArquivo->matriz = criaMatrizDinamica(novoArquivo->numeroLinhas,novoArquivo->numeroColunas);
     if (strcmp(novoArquivo->nome,"P2") == 0){  
-        printf("DEU BOM!\n");
+        printf("Compactando...\n");
         preencheMatrizDesconpactada(arquivo,novoArquivo);
-    }
-    else{
-        printf("DEU RUIM!\n");
-    }
-
-    if(strcmp(novoArquivo->nome,"P2") == 0){
         compactaMatriz(novoArquivo);
     }
-    printMatriz(novoArquivo);
-    // else Descompactar(arquivo);
+    else{
+        printf("Descompactando...\n");
+        preencheMatrizCompactada(arquivo,novoArquivo);
+        descompactaMatriz(novoArquivo);
+    }
+    // printMatriz(novoArquivo);
     return novoArquivo;
 }
 

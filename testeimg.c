@@ -114,17 +114,31 @@ int descompactaMatriz(Arquivo* arquivo){
 }
 
 void preencheMatrizCompactada(FILE* arquivo, Arquivo* novoArquivo){
-    char * linha = (char * ) malloc(sizeof(char) * novoArquivo->numeroColunas*2+4);
+    char* linha;
+    linha = (char * ) malloc(sizeof(char) * novoArquivo->numeroColunas*4);
     int tamanho = novoArquivo->numeroColunas*2+4;
-    char* caractere;
+    char separador[2] = " ";
+    char* token;
 
     for(int i = 0; i < novoArquivo->numeroLinhas+1; i++){
-        int contador = 0;
         fgets(linha, tamanho, arquivo);
         if (i>0){ 
-            for (int j = 0; j < tamanho; j++){  
+            printf("Linha lida antes: %s",linha);
+            token = strtok(linha,separador);
+            int j = 0;
+            while (token != NULL){
+                printf("token: %s\n",token);
+                if (strcmp(token,"@") ==  0){
+                    novoArquivo->matriz[i][j] = -1;
+                }
+                else{
+                    novoArquivo->matriz[i][j] = atoi(token);
+                }
+                printf("adicionado na matriz: %d\n",novoArquivo->matriz[i][j]);
+                token = strtok(NULL,separador);
+                j++;
             }
-            printf("\n");
+            
         }  
     }
 }

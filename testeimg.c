@@ -4,10 +4,29 @@
 #include <math.h>
 
 typedef struct {
-    char nome[10];
+    char nome[3];
     int numeroColunas, numeroLinhas, maiorPixel;
     int** matriz;
 } Arquivo;
+
+void preencheLinha1ComLinha2(int* linha1,int*linha2){
+    int i = 0;
+    while (linha2[i]!=-2){
+        linha1[i] = linha2[i];
+        i++;
+    }
+    linha1[i] = linha2[i]; 
+}
+
+void printLinha(int* linha){
+    for (int i = 0; i < 30; i++){
+        if (linha[i]== -2){
+            printf("-2\n");
+            break;
+        }
+        printf("%d ",linha[i]);
+    }
+}
 
 void printMatriz(Arquivo* arquivo){
     for (int i = 0; i < arquivo->numeroLinhas; i++){
@@ -19,9 +38,8 @@ void printMatriz(Arquivo* arquivo){
             }
             j++;
         }
-        printf("\n");
+        printf("-2\n");
     }
-    
 }
 
 int** criaMatrizDinamica(int numeroLinhas,int numeroColunas){
@@ -93,54 +111,70 @@ int compactaMatriz(Arquivo* arquivo){
 
 int descompactaMatriz(Arquivo* arquivo){
     int tamanho = arquivo->numeroColunas;
-
+    int* linhaDescompactada;
+    linhaDescompactada = (int*) malloc(sizeof(int) * tamanho);
     for (int k = 0; k < arquivo->numeroLinhas; k++){
-        for (int i = 0; i < tamanho; i++){
+        int j = 0;
+        int i = 0;
+        // printf("antes:");   
+        // printLinha(arquivo->matriz[k]);
+        while(j<arquivo->numeroColunas+1){
             if (arquivo->matriz[k][i] == -1){
                 int repetido = arquivo->matriz[k][i+1];
                 int quantidade = arquivo->matriz[k][i+2];
-
-                for (int j = i; j < quantidade + i; j++){
-                    arquivo->matriz[k][j] = repetido;            
+                int diferenca = j-i;
+                while(j<=quantidade + (i+diferenca)-1){
+                    linhaDescompactada[j] = repetido;
+                    j++;
                 }
+                i+=2;
             }
             else{
-                arquivo->matriz[k][i] = arquivo->matriz[k][i]; 
+                // printf("%d\n",arquivo->matriz[k][i]);
+                linhaDescompactada[j] = arquivo->matriz[k][i];
+                j++;
             }
+            i++;
         }
+        //(int*)
+        preencheLinha1ComLinha2(arquivo->matriz[k],linhaDescompactada);
+        // printLinha(arquivo->matriz[k]);
     }
-    // printMatriz(arquivo);
     return 1;
 }
 
 void preencheMatrizCompactada(FILE* arquivo, Arquivo* novoArquivo){
     char* linha;
     linha = (char * ) malloc(sizeof(char) * novoArquivo->numeroColunas*4);
-    int tamanho = novoArquivo->numeroColunas*2+4;
+    int tamanho = novoArquivo->numeroColunas*4;
+    int contador;
     char separador[2] = " ";
     char* token;
 
-    for(int i = 0; i < novoArquivo->numeroLinhas+1; i++){
+    for(int i = -1; i < novoArquivo->numeroLinhas; i++){
         fgets(linha, tamanho, arquivo);
-        if (i>0){ 
-            printf("Linha lida antes: %s",linha);
+        if (i>=0){ 
             token = strtok(linha,separador);
             int j = 0;
+            contador = 0;
             while (token != NULL){
-                printf("token: %s\n",token);
                 if (strcmp(token,"@") ==  0){
                     novoArquivo->matriz[i][j] = -1;
                 }
-                else{
-                    novoArquivo->matriz[i][j] = atoi(token);
+                else if(strcmp(token,"\n") == 0 || contador == novoArquivo->numeroColunas){
+                    novoArquivo->matriz[i][j] = -2;
                 }
-                printf("adicionado na matriz: %d\n",novoArquivo->matriz[i][j]);
+                else{
+                    sscanf(token, "%d", &novoArquivo->matriz[i][j]);
+                }
                 token = strtok(NULL,separador);
                 j++;
+                contador++;
             }
-            
+            novoArquivo->matriz[i][j] = -2;
         }  
     }
+    // printMatriz(novoArquivo);
 }
 
 FILE* abrirArquivo(char* nomeArquivo){
@@ -153,7 +187,7 @@ Arquivo* lerArquivo(FILE* arquivo){
     if(arquivo == NULL) printf("Erro na leitura");
     
     Arquivo *novoArquivo = (Arquivo*) malloc(sizeof(Arquivo) * 1);
-    fscanf(arquivo,"%s", &novoArquivo->nome);
+    fscanf(arquivo,"%s", novoArquivo->nome);
     printf("%s\n",novoArquivo->nome);
     fscanf(arquivo, "%d %d", &novoArquivo->numeroColunas, &novoArquivo->numeroLinhas);
     fscanf(arquivo, "%d", &novoArquivo->maiorPixel);
@@ -169,15 +203,20 @@ Arquivo* lerArquivo(FILE* arquivo){
         preencheMatrizCompactada(arquivo,novoArquivo);
         descompactaMatriz(novoArquivo);
     }
-    // printMatriz(novoArquivo);
+    printMatriz(novoArquivo);
     return novoArquivo;
 }
 
-void escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
-    if(strcmp(arquivo->nome,"P2") == 0) fprintf(arquivoSaida,"P8 \n");
-    else fprintf(arquivoSaida, "%s \n",arquivo->nome);
+int escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
+    printf("PASSOU!\n");
+    if(strcmp(arquivo->nome,"P2") == 0){
+      fprintf(arquivoSaida,"P8\n");  
+    } 
+    else {
+        fprintf(arquivoSaida,"%s\n","P2");
+    }
 
-    fprintf(arquivoSaida,"%d %d \n", arquivo->numeroColunas, arquivo->numeroLinhas);
+    fprintf(arquivoSaida,"%d %d\n", arquivo->numeroColunas, arquivo->numeroLinhas);
     fprintf(arquivoSaida, "%d \n", arquivo->maiorPixel);
 
     for(int i = 0; i < arquivo->numeroLinhas; i++){
@@ -191,8 +230,10 @@ void escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
             }
             j++;
         }
+        printf("%d\n",arquivo->matriz[i][j]);
         fprintf(arquivoSaida,"\n");
     }
+    return 1;
 }
 
 int main(int argc, char* argv[]){
@@ -204,12 +245,11 @@ int main(int argc, char* argv[]){
 
     FILE* arquivoEntrada = fopen(argv[1], "r");
     FILE* arquivoSaida = fopen(argv[2], "w");
-
+    fprintf(arquivoSaida, "\n");
     if (arquivoEntrada == NULL) {
         perror("Erro ao abrir o arquivo");
         return 0;
     }
-
     Arquivo *novoArquivo;
     novoArquivo = lerArquivo(arquivoEntrada);
     escreverArquivo(novoArquivo,arquivoSaida);

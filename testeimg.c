@@ -237,7 +237,6 @@ int escreverArquivo(Arquivo *arquivo, FILE *arquivoSaida){
 }
 
 int main(int argc, char* argv[]){
-    // TESTE GIT
     if (argc != 3) {
         printf("Uso: %s arquivo_entrada arquivo_saida\n", argv[0]);
         return 1;
